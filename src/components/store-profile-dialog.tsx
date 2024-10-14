@@ -9,8 +9,11 @@ import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Input } from './ui/input'
 import { Textarea } from './ui/textarea'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { getManagedRestaurant } from '@/api/get-managed-restaurant'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  getManagedRestaurant,
+  type GetManagedRestaurantResponse,
+} from '@/api/get-managed-restaurant'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -25,6 +28,8 @@ const storeProfileSchema = z.object({
 export type StoreProfileSchema = z.infer<typeof storeProfileSchema>
 
 export function StoreProfileDialog() {
+  const queryClient = useQueryClient()
+
   const { data: managedRestaurant } = useQuery({
     queryKey: ['managedRestaurant'],
     queryFn: getManagedRestaurant,
@@ -45,6 +50,22 @@ export function StoreProfileDialog() {
 
   const { mutateAsync: updateProfileFn } = useMutation({
     mutationFn: updateProfile,
+    onSuccess(_, { name, description }) {
+      const cached = queryClient.getQueryData<GetManagedRestaurantResponse>([
+        'managedRestaurant',
+      ])
+
+      if (cached) {
+        queryClient.setQueryData<GetManagedRestaurantResponse>(
+          ['managedRestaurant'],
+          {
+            ...cached,
+            name,
+            description,
+          }
+        )
+      }
+    },
   })
 
   async function handleUpdateProfile(data: StoreProfileSchema) {
