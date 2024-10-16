@@ -11,8 +11,25 @@ import {
 
 import { OrderTableRow } from './order-table-row'
 import { OrderTableFilters } from './orders-table-filters'
+import { useQuery } from '@tanstack/react-query'
+
+import { getOrders } from '@/api/get-orders'
+
+export interface OrderTableRowProps {
+  orders: {
+    status: 'pending' | 'preparing' | 'delivered' | 'delivering' | 'cancelled'
+    createdAt: string
+    orderId: string
+    customerName: string
+    total: number
+  }
+}
 
 export function Orders() {
+  const { data: result } = useQuery({
+    queryKey: ['orders'],
+    queryFn: getOrders,
+  })
   return (
     <>
       <Helmet title="Pedidos" />
@@ -37,9 +54,8 @@ export function Orders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Array.from({ length: 10 }).map((_, i) => {
-                  const key = i
-                  return <OrderTableRow key={key} />
+                {result?.orders.map(order => {
+                  return <OrderTableRow key={order.orderId} orders={order} />
                 })}
               </TableBody>
             </Table>
