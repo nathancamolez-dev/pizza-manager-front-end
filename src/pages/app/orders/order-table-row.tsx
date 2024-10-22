@@ -9,9 +9,43 @@ import { OrderStatus } from '@/components/order-status'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { cancelOrder } from '@/api/cancel-order'
+import type { GetOrdersResponse } from '@/api/get-orders'
+import { toast } from 'sonner'
 
 export function OrderTableRow({ orders }: OrderTableRowProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const queryClient = useQueryClient()
+
+  const { mutateAsync: cancelOrderFn } = useMutation({
+    mutationFn: cancelOrder,
+    onSuccess: (_, { orderId }) => {
+      const ordersCached = queryClient.getQueriesData<GetOrdersResponse>({
+        queryKey: ['orders'],
+      })
+
+      // biome-ignore lint/complexity/noForEach: <explanation>
+      ordersCached.forEach(([cacheKey, cacheData]) => {
+        if (!cacheData) {
+          return
+        }
+        queryClient.setQueryData<GetOrdersResponse>(cacheKey, {
+          ...cacheData,
+          orders: cacheData.orders.map(order => {
+            if (order.orderId === orderId) {
+              return { ...order, status: 'cancelled' }
+            }
+            return order
+          }),
+        })
+      })
+
+      toast.success('O pedido foi cancelado com sucesso!', {
+        closeButton: true,
+      })
+    },
+  })
 
   return (
     <TableRow>
@@ -52,7 +86,12 @@ export function OrderTableRow({ orders }: OrderTableRowProps) {
         </Button>
       </TableCell>
       <TableCell>
-        <Button variant="ghost" size="xs">
+        <Button
+          disabled={!['pending', 'preparing'].includes(orders.status)}
+          onClick={() => cancelOrderFn({ orderId: orders.orderId })}
+          variant="ghost"
+          size="xs"
+        >
           <X className="mr-2 h-3 w-3" />
           Cancelar
         </Button>
