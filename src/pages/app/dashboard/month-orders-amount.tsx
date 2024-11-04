@@ -21,7 +21,9 @@ export function MonthOrdersAmountCard() {
         {monthOrdersAmount ? (
           <>
             <span className="text-2xl font-bold tracking-tight">
-              {monthOrdersAmount.orders.toLocaleString('pt-BR')}
+              {monthOrdersAmount.orders !== undefined
+                ? monthOrdersAmount.orders.toLocaleString('pt-BR')
+                : '0'}
             </span>
             <p className="text-xs text-muted-foreground">
               {monthOrdersAmount.diffFromYesterday >= 0 ? (

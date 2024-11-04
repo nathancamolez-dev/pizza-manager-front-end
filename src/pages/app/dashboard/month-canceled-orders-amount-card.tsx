@@ -21,7 +21,9 @@ export function MonthCanceledOrdersAmountCard() {
         {monthCanceledOrdersAmount ? (
           <>
             <span className="text-2xl font-bold tracking-tight">
-              {monthCanceledOrdersAmount.orders.toLocaleString('pt-BR')}
+              {monthCanceledOrdersAmount.orders !== undefined
+                ? monthCanceledOrdersAmount.orders.toLocaleString('pt-BR')
+                : '0'}
             </span>
             <p className="text-xs text-muted-foreground">
               {monthCanceledOrdersAmount.diffFromLastMonth < 0 ? (
