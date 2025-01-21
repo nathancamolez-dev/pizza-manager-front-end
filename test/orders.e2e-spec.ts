@@ -83,7 +83,5 @@ test('filter by status ', async ({ page }) => {
     .getByRole('button', { name: 'Filtrar resultados', exact: true })
     .click()
 
-  const tableRows = await page.getByRole('cell', { name: 'Pendente' }).all()
-
-  expect(tableRows).toHaveLength(10)
+  await expect(page.getByRole('cell', { name: 'Pendente' })).toHaveCount(10)
 })
